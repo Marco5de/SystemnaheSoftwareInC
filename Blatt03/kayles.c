@@ -86,12 +86,11 @@ void printGame(unsigned long int cones, int nc){
 
 int userInput(int nc){
 	int input;
-	bool hit = false;
 	printf("your move: ");
 	do{
 		scanf("%d",&input);
 		cleanBuffer();
-	}while(abs(input > nc) || hit);
+	}while(abs(input) > nc);
 	return input;
 }
 
