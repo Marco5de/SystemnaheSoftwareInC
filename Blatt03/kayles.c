@@ -9,6 +9,7 @@ void printGame(unsigned long int cones,int nc);
 int userInput(int nc);
 void cleanBuffer();
 bool handleInput(int input, unsigned long int cones);
+void gameAction(unsigned long int *cones, int pos, int *gameState, int nc);
 
 int main(){
 	/* START: initial game setup*/
@@ -36,41 +37,24 @@ int main(){
 		printf("Input: %d\n",input);
 		
 		if(handleInput(input,cones)){
-			if(input > 0){
-				cones &= ~(1 << (input-1));
-				gameState--;
-			}
-			else if(input < 0){
-				cones &= ~(1 <<(abs(input)-1));
-				cones &= ~(1 <<(abs(input)));
-				gameState -= 2;
-			}
-			printGame(cones,number_cones);
+			gameAction(&cones,input,&gameState,number_cones);
 		 }else
-			printf("INVALID INPUT. Selected cone already fallen. TRY AGAIN\n");
+			printf("invalid input. selected cone already fallen. try again\n");
 		
 		if(gameState < 1)
 			exit(1);
-		//AI selecting random number (plays randomly, no logic involved)
+		//opponent selecting random number (plays randomly, no logic involved)
 		int selec;
 		while(!(handleInput((selec = (rand()%(2*number_cones))-number_cones),cones)));
-		printf("Your opponent chose: %d\n",selec);
-		if(selec > 0){
-			cones &= ~(1 << (selec -1));
-			gameState--;
-		}else if(selec < 0){
-			cones &= ~(1 << (abs(selec)-1));
-			cones &= ~(1 << (abs(selec)));
-			gameState -= 2;
-		}
-		printGame(cones,number_cones);
+		printf("your opponent chose: %d\n",selec);
+		gameAction(&cones,selec,&gameState,number_cones);
 		}
 }
-	/* END: game loop */
+	/* end: game loop */
 
 	
-/* 	check wether the selected Cone (or a neighbor) is already fallen 
-*	RETURN: bool ~ valid entry or not
+/* 	check wether the selected cone (or a neighbor) is already fallen 
+*	return: bool ~ valid entry or not
 */
 bool handleInput(int input,unsigned long int cones){
 	bool valid = false;
@@ -80,7 +64,7 @@ bool handleInput(int input,unsigned long int cones){
 		valid = (cones & (1 << (abs(input)-1)));
 		valid = valid && (cones & (1 << (abs(input))));
 	}else if(input == 0)
-		printf("Cone does not exist.\n");
+		printf("cone does not exist.\n");
 
 	return valid;
 
@@ -103,7 +87,7 @@ void printGame(unsigned long int cones, int nc){
 int userInput(int nc){
 	int input;
 	bool hit = false;
-	printf("Your move: ");
+	printf("your move: ");
 	do{
 		scanf("%d",&input);
 		cleanBuffer();
@@ -114,4 +98,20 @@ int userInput(int nc){
 void cleanBuffer(){
 	int x;
 	while((x=getchar()) != EOF && x != '\n');
+}
+
+
+void gameAction(unsigned long int* cones, int pos, int *gameState, int nc){
+	int gs = *gameState;
+	if(pos > 0){
+		*cones &= ~(1 << (pos-1));
+		--gs;
+	}
+	else if(pos < 0){
+		*cones &= ~(1 <<(abs(pos)-1));
+		*cones &= ~(1 <<(abs(pos)));
+		gs -= 2;
+	}
+	*gameState = gs;
+	printGame(*cones, nc);
 }
