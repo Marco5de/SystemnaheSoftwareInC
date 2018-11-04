@@ -125,8 +125,9 @@ void opponentAction(int nc, unsigned long int *cones,int *gs){
 		int count = 0;
 		for(int i=1; i<nc; i++){
 			curr = *cones & (1<<i);
-			if(curr ^ prev)
+			if(curr && !prev)
 				count++;
+			prev = curr;	
 		}
-		printf("Deubgcount: %d\n",count);
+		printf("Deubgcount: %d\n",count+1);
 }
