@@ -9,6 +9,8 @@ int userInput(int nc);
 void cleanBuffer();
 bool handleInput(int input, unsigned long int cones);
 void gameAction(unsigned long int *cones, int pos, int *gameState, int nc);
+void opponentAction(int nc, unsigned long int *cones,int *gs);
+
 
 int main(){
 	/* START: initial game setup*/
@@ -34,19 +36,16 @@ int main(){
 	while(gameState > 0){
 		int input = userInput(number_cones);
 		printf("Input: %d\n",input);
-		while(!handleInput(input,cones)){
-			input = userInput(number_cones);
-			printf("input: %d\n",input);
-
-		}
-		gameAction(&cones,input,&gameState,number_cones);
+		
+		if(handleInput(input,cones)){
+			gameAction(&cones,input,&gameState,number_cones);
+		 }else
+			printf("invalid input. selected cone already fallen. try again\n");
+		
 		if(gameState < 1)
 			exit(1);
 		//opponent selecting random number (plays randomly, no logic involved)
-		int selec;
-		while(!(handleInput((selec = (rand()%(2*number_cones))-number_cones),cones)));
-		printf("your opponent chose: %d\n",selec);
-		gameAction(&cones,selec,&gameState,number_cones);
+		opponentAction(number_cones,&cones,&gameState);
 		}
 }
 	/* end: game loop */
@@ -64,6 +63,7 @@ bool handleInput(int input,unsigned long int cones){
 		valid = valid && (cones & (1 << (abs(input))));
 	}else if(input == 0)
 		printf("cone does not exist.\n");
+
 	return valid;
 
 }
@@ -111,4 +111,22 @@ void gameAction(unsigned long int* cones, int pos, int *gameState, int nc){
 	}
 	*gameState = gs;
 	printGame(*cones, nc);
+}
+
+void opponentAction(int nc, unsigned long int *cones,int *gs){
+		int selec;
+		while(!(handleInput((selec = (rand()%(2*nc))-nc),*cones)));
+		printf("your opponent chose: %d\n",selec);
+		gameAction(cones,selec,gs,nc);
+
+		//Idee Zaehle die anzhal der noch vorhandenen blocks im Spiel. 
+		bool prev = *cones & 1;
+		bool curr;
+		int count = 0;
+		for(int i=1; i<nc; i++){
+			curr = *cones & (1<<i);
+			if(curr ^ prev)
+				count++;
+		}
+		printf("Deubgcount: %d\n",count);
 }
