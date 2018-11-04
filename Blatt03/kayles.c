@@ -3,7 +3,6 @@
 #include <time.h>
 #include <limits.h>
 #include <stdbool.h>
-//TODO REMOVE bufferClean and Exit(1)
 
 void printGame(unsigned long int cones,int nc);
 int userInput(int nc);
