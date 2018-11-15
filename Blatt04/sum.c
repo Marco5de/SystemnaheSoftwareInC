@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <math.h>
 
 bool checkInput(int i);
 int classifyInput(int i);
 void handleInput(int input, int p);	
 void makeNumber();
 int convertToInt(int i);
+
 typedef enum {S0, S1, S2, S3, S4, S5, S6, S7} state;
 
 state zustand = S0;
@@ -19,60 +21,60 @@ bool sign = false;
 bool expSign = false;
 int counterDec = 0;
 
+
+double sumA = 0;
+double c = 0;
+
+
 int main(){
 	while((input = getchar())!= EOF && input!='\n'){
-		/*DEBUGGING*/
-	//	printf("curr: %f\nexp: %f\ndec: %f\ninput: %d\n counterDec: %d\n\n\n",curr,expo,dec,input,counterDec);
 		if(checkInput(input)){
-			//printf("input= %c\n",(char)input);
 			int x = classifyInput(input);
 			switch(zustand){
 				case S0: switch(x){
-							case '+': zustand = S1; handleInput(input,counterDec);break;
-							case '0': zustand = S2; handleInput(input,counterDec);break;
-							case '.': zustand = S3; handleInput(input,counterDec);break;
+							case '+': handleInput(input,counterDec); zustand = S1; break;
+							case '0': handleInput(input,counterDec); zustand = S2; break;
+							case '.': handleInput(input,counterDec); zustand = S3; break;
 							default: return -1;
 							}break;
 				case S1: switch(x){
-							case '.': zustand = S3; handleInput(input,counterDec);break;
-							case '0': zustand = S2; handleInput(input,counterDec);break;
+							case '.': handleInput(input,counterDec); zustand = S3; break;
+							case '0': handleInput(input,counterDec); zustand = S2; break;
 							default: return -1;
 						}break;
 				case S2: switch(x){
-							case '.': zustand = S4; handleInput(input,counterDec);break;
-							case '0': zustand = S2; handleInput(input,counterDec);break;
-							case 'e': zustand = S5; handleInput(input,counterDec);break;
-							default: printf("Zahl eingelesen in Zustand S2\n");
-									 makeNumber();
+							case '.': handleInput(input,counterDec); zustand = S4; break;
+							case '0': handleInput(input,counterDec); zustand = S2; break;
+							case 'e': handleInput(input,counterDec); zustand = S5; break;
+							default:  makeNumber(); 
 						}break;	
 				case S3: switch(x){
-							case '0': zustand = S4; handleInput(input,++counterDec);break;
+							case '0': handleInput(input,++counterDec); zustand = S4; break;
 							default: return -1;
 						}break;	
 				case S4: switch(x){
-							case 'e': zustand = S5; handleInput(input,counterDec);break;
-							case '0': zustand = S4; handleInput(input,++counterDec);break;
-							default: printf("Zahl eingelesen in Zustand S4\n");
-									 makeNumber();
+							case 'e': handleInput(input,counterDec); zustand = S5; break;
+							case '0': handleInput(input,++counterDec); zustand = S4; break;
+							default:  makeNumber(); 
 						}break;
 				case S5: switch(x){
-							case '+': zustand = S6; handleInput(input,counterDec);break;
-							case '0': zustand = S7; handleInput(input,counterDec);break;
+							case '+': handleInput(input,counterDec);zustand = S6; break;
+							case '0': handleInput(input,counterDec);zustand = S7; break;
 							default: return -1;
 						}break;	
 				case S6: switch(x){
-							case '0': zustand = S7; handleInput(input,counterDec);break;
+							case '0': handleInput(input,counterDec); zustand = S7; break;
 							default: return -1;
 						}break;	
 				case S7: switch(x){
-							case '0':zustand = S7; handleInput(input,counterDec);break;
-							default: printf("Zahl eingelesen in S7\n");
-									 makeNumber();
+							case '0':handleInput(input,counterDec); zustand = S7; break;
+							default: makeNumber(); 
 						}break;
 			}	
 		}
 	}
 	makeNumber();
+	printf("Trivial Sum: %f\nKahan-Sum: %f\nDiff: %f\n",sumT,sumA,fabs((sumT-sumA)));
 }	
 
 int convertToInt(int i){
@@ -94,7 +96,6 @@ int convertToInt(int i){
 
 void handleInput(int input, int c){
 	if(classifyInput(input) == '0'){
-		//printf("Inside handleinput 0\n");
 		input = convertToInt(input);
 		switch(zustand){
 			case S0: curr = input; break;
@@ -116,27 +117,20 @@ void handleInput(int input, int c){
 			default: exit(1);
 		}	
 	}else if(classifyInput(input) == 'e'){
-		//printf("Inside handleinut e\n");
 		switch(zustand){
 			case S2: break;
 		}	
 	}else if(classifyInput(input) == '+'){
-		//printf("Inside hanlde input +\n");
 		switch(zustand){
-			case S0: if(input == '+')
-						sign = false;
-					else sign = true;
-					break;
+			case S0: {if(input == '+'){sign=false;}
+						else{sign=true;}}break;
 			case S5: if(input == '+')
 						expSign = false;
 					else
 					expSign = true;
 					break;
 			}		
-	}else
-		printf("Default-message: Fehlerhafte Eingabe!");
-
-
+	}
 }
 	
 bool checkInput(int i){
@@ -145,7 +139,6 @@ bool checkInput(int i){
 	else
 		return false;
 }
-//returns -1 if for some reason an error occured
 int classifyInput(int i){
 	if(i==69 || i==101)
 		return 'e';
@@ -161,8 +154,6 @@ int classifyInput(int i){
 
 void makeNumber(){
 	double output = curr;
-	if(sign)
-		output *= -1;
 	for(int i=0; i<counterDec; i++)
 		dec*=0.1;		
 	output += dec;	
@@ -176,8 +167,19 @@ void makeNumber(){
 			}	
 		}	
 	}
+	if(sign){
+		output*=(-1);
+		}
 	printf("Die einglesene Double ist: %f\n",output);
+	//trivial sum
 	sumT += output;
+	//kahan sum
+	double y = output - c;
+	double t = sumA + y;
+	c = (t - sumA) - y;
+	sumA = t;
+
+	//init
 	curr = 0;
 	expo = 0;
 	dec = 0;
