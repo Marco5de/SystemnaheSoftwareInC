@@ -35,12 +35,12 @@ int main(){
 							case '+': handleInput(input,counterDec); zustand = S1; break;
 							case '0': handleInput(input,counterDec); zustand = S2; break;
 							case '.': handleInput(input,counterDec); zustand = S3; break;
-							default: return -1;
+							default: return 0;
 							}break;
 				case S1: switch(x){
 							case '.': handleInput(input,counterDec); zustand = S3; break;
 							case '0': handleInput(input,counterDec); zustand = S2; break;
-							default: return -1;
+							default: return 0;
 						}break;
 				case S2: switch(x){
 							case '.': handleInput(input,counterDec); zustand = S4; break;
@@ -50,7 +50,7 @@ int main(){
 						}break;	
 				case S3: switch(x){
 							case '0': handleInput(input,++counterDec); zustand = S4; break;
-							default: return -1;
+							default: return 0;
 						}break;	
 				case S4: switch(x){
 							case 'e': handleInput(input,counterDec); zustand = S5; break;
@@ -60,11 +60,11 @@ int main(){
 				case S5: switch(x){
 							case '+': handleInput(input,counterDec);zustand = S6; break;
 							case '0': handleInput(input,counterDec);zustand = S7; break;
-							default: return -1;
+							default: return 0;
 						}break;	
 				case S6: switch(x){
 							case '0': handleInput(input,counterDec); zustand = S7; break;
-							default: return -1;
+							default: return 0;
 						}break;	
 				case S7: switch(x){
 							case '0':handleInput(input,counterDec); zustand = S7; break;
@@ -74,7 +74,9 @@ int main(){
 		}
 	}
 	makeNumber();
-	printf("Trivial Sum: %f\nKahan-Sum: %f\nDiff: %f\n",sumT,sumA,fabs((sumT-sumA)));
+	printf("Regular sum: %.17lg\n",sumT);
+	printf("Kahan sum:   %.17lg\n",sumA);
+	printf("Difference:  %lg\n",fabs(sumT-sumA));
 }	
 
 int convertToInt(int i){
@@ -91,7 +93,7 @@ int convertToInt(int i){
 		case 57: return 9;
 		default: exit(1);
 	}
-	return -1;
+	return 0;
 }
 
 void handleInput(int input, int c){
@@ -114,7 +116,7 @@ void handleInput(int input, int c){
 					else 
 						expo = expo*10 + input;
 					break;	
-			default: exit(1);
+			default: exit(0);
 		}	
 	}else if(classifyInput(input) == 'e'){
 		switch(zustand){
@@ -149,7 +151,7 @@ int classifyInput(int i){
 	else if(i==46)
 		return '.';
 	else 
-		return -1;
+		return -0;
 }		
 
 void makeNumber(){
@@ -170,7 +172,6 @@ void makeNumber(){
 	if(sign){
 		output*=(-1);
 		}
-	printf("Die einglesene Double ist: %f\n",output);
 	//trivial sum
 	sumT += output;
 	//kahan sum
