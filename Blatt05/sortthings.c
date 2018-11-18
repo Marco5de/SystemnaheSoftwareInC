@@ -30,6 +30,14 @@ int main(){
 
 }
 
+
+
+
+/***************************************************************************
+	everything below this is for init of the game
+	all methods above this are for game logic
+***************************************************************************/	
+
 /* 	returning 0 if succes
 	anything != 0 singaling failure
 */		

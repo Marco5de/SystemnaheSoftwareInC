@@ -119,7 +119,7 @@ void opponentAction(int nc, unsigned long int *cones,int *gs){
 		printf("your opponent chose: %d\n",selec);
 		gameAction(cones,selec,gs,nc);
 
-		//Idee Zaehle die anzhal der noch vorhandenen blocks im Spiel. 
+		//Idee Zaehle die anzhal der noch vorhandenen bloecke im Spiel. 
 		bool prev = *cones & 1;
 		bool curr;
 		int count = 0;
