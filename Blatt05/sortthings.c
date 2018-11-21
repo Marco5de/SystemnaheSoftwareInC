@@ -12,10 +12,6 @@
 /* setting the bth bit of a to 1*/
 #define SETBIT(a,b) ((a) |= (1 << b))
 
-/*	spiel funktioniert jetzt soweit fehlerfrei, so dass alles eingeordnet werden kann
-	TODO spiel nach einmaligen korrekten durchspielen list wieder neu initialisieren
-	TODO 
-*/
 /*Methods*/
 int pickRand();
 struct mountain convertToMountain();
@@ -73,10 +69,7 @@ void updateSrt(int pick, int pos){
 	qsort(srt, N_MAX, sizeof(struct mountain), cmpMTN);
 	printArr(N_MAX,srt);
 }
-/* prüfung fkt im Moment nur aus einer Richtung
-	von unten, daher auch noch immmer wieder fehler im spiel!
-	Nutze cmpMTN für den vergleich, macht genau das gewünschte
-*/
+
 bool checkValid(int pos,int pick){
 	int currLast = points%8;
 	if(map & (1 << pick)){
@@ -95,8 +88,8 @@ bool checkValid(int pos,int pick){
 	return false;
 }
 /*	returns 0 if mnt have equal height
-	returns >0 if param 1 is taller
-	returns <0 if param 2 is taller
+	returns >0 if param 2 is taller
+	returns <0 if param 1 is taller
 */	
 int cmpMTN(const void *a, const void *b){
 	const struct mountain *m1 = (struct mountain *)a;
@@ -124,7 +117,6 @@ void displayGameState(){
 void initSrt(){
 	srt[0] = arr[0];
 	for(int i = 0; i<N_MAX; i++){
-	//	srt[i] = {"",0};
 	}
 }	
 
@@ -159,7 +151,6 @@ int pickRand(){
 
 		}
 	}
-	printf("\n\n\n");
 	fclose(file);
 	return 0;
 }
