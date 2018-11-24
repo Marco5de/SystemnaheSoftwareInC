@@ -75,14 +75,30 @@ void game(){
 		printf("%2d Words remaining:\n Current queue of words: %s,...,%s\n",counter,first.name,last.name);  
 		printf("Next word:    ");		
 		char *str = calloc(128,sizeof(char));;
-		if(scanf("%s",str)!=1)
+		if(scanf("%128s",str)!=1)
 			exit(0);
 	
 		struct word *selec;
 		if((selec=checkValid(str)))
 			printf("Gültige Eingabe. Sie haben %s gewaehlt!\n",selec->name);
-		free(str);
+		else{
+			printf("Falsche Eingabe. Versuche es nocheinmal!\n");
+			free(str);
+			continue;
+		}
+		
+		if(*(first.name)+32 ==(*(str+strlen(str)-1))){
+			printf("Ihre Auswahl war gültig. Füge vorne in Liste ein.\n\n");
+			first = *selec;
+		}else if((*str)+32 == *(last.name + strlen(last.name)-1)){
+			printf("Ihre Auswahl war gültig. Füge hinten in die Liste ein. \n\n");
+			last = *selec;
+		}else
+			printf("Falsche Wahl versuchen sie es erneut\n\n");
 
+			
+
+		free(str);
 	}
 }
 
@@ -122,18 +138,15 @@ int init(){
 		struct word *newWord;
 		newWord = (struct word*) calloc(1,sizeof(*newWord));
 		if(!newWord){exit(1);}
-		char *str = malloc(128);
-		str = buf;
-		str[strlen(str)-1] = 0; //cutting off new line
+		buf[strlen(buf)-1] = 0; //cutting off newLine
 
 		newWord->set = false; //set properties for new entry
 		newWord->name = (char *)malloc(strlen(buf));
-		strcpy(newWord->name,str);
+		strcpy(newWord->name,buf);
 		newWord->next = NULL;
 		newWord->prev = NULL;
 		newWord->bucketNext = NULL;
 	
-		free(str);
 
 		if(list.head == NULL){
 			//printf("Added first new word\n");
