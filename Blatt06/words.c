@@ -19,6 +19,8 @@ int init();
 void game();
 struct word* checkValid(char *str);
 void printList();
+void available();
+void cleanBuffer();
 
 #define BUFFLEN 255
 /*
@@ -62,6 +64,7 @@ int main(){
 		i++;
 		tmp = tmp->bucketNext;
 	}
+	tmp->set = true;
 	first = *tmp;
 	last = *tmp;
 	
@@ -75,9 +78,15 @@ void game(){
 		printf("%2d Words remaining:\n Current queue of words: %s,...,%s\n",counter,first.name,last.name);  
 		printf("Next word:    ");		
 		char *str = calloc(128,sizeof(char));;
-		if(scanf("%128s",str)!=1)
-			exit(0);
-	
+		
+		fgets(str,sizeof(str),stdin);
+		if(*str == '\n'){
+			available();
+			free(str);
+			cleanBuffer();
+			continue;
+		}
+		cleanBuffer();
 		struct word *selec;
 		if((selec=checkValid(str)))
 			printf("Gültige Eingabe. Sie haben %s gewaehlt!\n",selec->name);
@@ -86,27 +95,39 @@ void game(){
 			free(str);
 			continue;
 		}
-		
+		if(selec->set){
+			printf("Stadt wurde bereits verwendet! Wählen sie eine andere\n\n");
+			free(str);
+			continue;
+		}	
 		if(*(first.name)+32 ==(*(str+strlen(str)-1))){
 			printf("Ihre Auswahl war gültig. Füge vorne in Liste ein.\n\n");
 			first = *selec;
+			selec->set = true;
 		}else if((*str)+32 == *(last.name + strlen(last.name)-1)){
 			printf("Ihre Auswahl war gültig. Füge hinten in die Liste ein. \n\n");
+			selec->set = true;
 			last = *selec;
 		}else
 			printf("Falsche Wahl versuchen sie es erneut\n\n");
-
-			
 
 		free(str);
 	}
 }
 
-/* function has seg fault if paramet str is not included in list, most likely error in for loop */
+void available(){
+	printf("\n\nVerfügbare Städte: \n");
+	for(struct word *i = list.head; i->bucketNext!=NULL; i=i->bucketNext){
+		if(!i->set)
+			printf("%s  ",i->name); 
+	}
+	printf("\n\n");
+	printf("Press enter to continue\n");
+}
 struct word* checkValid(char *str){
 	for(struct word *i = list.head; i->bucketNext !=NULL; i = i->bucketNext){
-		int len = strlen(str);//die aus der datei eingelesenen strings enden auf \n	
-		if(strncmp(str,i->name,len-1)==0)
+	//	int len = strlen(str);//die aus der datei eingelesenen strings enden auf \n	
+		if(strncmp(str,i->name,strlen(str)-1)==0)
 			return i;
 		else
 			continue;
@@ -192,13 +213,7 @@ int init(){
 
 }
 
-
-
-
-
-
-
-
-
-
-
+void cleanBuffer(){
+	int x;
+	while((x=getchar()) != EOF && x != '\n');
+}
