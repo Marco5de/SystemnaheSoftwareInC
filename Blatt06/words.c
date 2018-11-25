@@ -75,6 +75,10 @@ int main(){
 
 void game(){
 	while(true){
+		if(!counter){
+			printf("Sie haben gewonnen!!\n\n");
+			break;
+		}	
 		printf("%2d Words remaining:\n Current queue of words: %s,...,%s\n",counter,first.name,last.name);  
 		printf("Next word:    ");		
 		char *str = calloc(128,sizeof(char));;
@@ -108,9 +112,12 @@ void game(){
 			printf("Ihre Auswahl war gültig. Füge hinten in die Liste ein. \n\n");
 			selec->set = true;
 			last = *selec;
-		}else
+		}else{
 			printf("Falsche Wahl versuchen sie es erneut\n\n");
-
+			free(str);
+			continue;
+		}
+		counter--;
 		free(str);
 	}
 }
