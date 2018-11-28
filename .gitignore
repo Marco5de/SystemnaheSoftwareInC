@@ -3,7 +3,7 @@
 
 # Unignore all with extensions
 !*.*
-
+*.swp
 # Unignore all dirs
 !*/
 
