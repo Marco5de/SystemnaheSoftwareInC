@@ -15,7 +15,7 @@ void game();
 struct word* checkValid(char *str);
 void available();
 void cleanBuffer();
-
+// macros
 #define BUFFLEN 255
 #define WORDSET_MAX 26
 #define FILENAME "cities.txt"
@@ -85,6 +85,10 @@ void game(){
 		char *str = calloc(128,sizeof(char));
 		
 		fgets(str,sizeof(str),stdin);
+		if(str == 0){
+			free(str);
+			continue;
+		}	
 		if(*str == '\n'){
 			available();
 			free(str);
