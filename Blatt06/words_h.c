@@ -13,6 +13,7 @@ int hashE(char *str);
 int init();
 void game();
 struct word* checkValid(char *str);
+void printList();
 void available();
 void cleanBuffer();
 
@@ -26,9 +27,11 @@ void cleanBuffer();
 struct word{
 	char *name;
 	bool set;
-	struct word *fnext;
-	struct word *enext; 
+	struct Word *fnext;
+	struct Word *enext; 
 };
+
+
 struct wordSet{
 	struct word *bucket[WORDSET_MAX];
 };	
@@ -44,37 +47,25 @@ struct word last;
 
 int main(){
 	init();
-
-	srand(time(0)^getpid());
-	int rng = rand()%counter;
-	printf("random: %d\n",rng);
-	int curr = 0;
-	bool exit = false;
-	for(int i=0; i<WORDSET_MAX; i++){
-		if(exit)
-			break;
-		if(fSet.bucket[i]==0)
-			continue;
-		struct word *t = fSet.bucket[i];
-		while(t != 0){
-			if(rng == ++curr){
-				first = *t;
-				last = *t;
-				exit = true;
-				break;
-			}else{
-				t = t->fnext;
-				continue;
-			}	
-		}
-	}
-
+	
 	game();
 
 	return 0;
 }
 
 void game(){
+	printf("Geben sie das erste Element der Liste ein:\n");
+	char *s = calloc(128,sizeof(char));
+	fgets(s,sizeof(s),stdin);
+	if(*s == '\n'){
+		available();
+		free(s);
+		cleanBuffer();
+	}else{
+		printf("Falsche eingabe\n");
+		exit(1);
+	}	
+
 	while(true){
 		if(!counter){
 			printf("Sie haben gewonnen!!\n\n");
@@ -93,6 +84,7 @@ void game(){
 		}
 
 		cleanBuffer();
+		printf("stuck after bufferclean \n");
 		struct word *selec;
 		if((selec=checkValid(str)))
 			printf("Gültige Eingabe. Sie haben %s gewaehlt!\n",selec->name);
@@ -126,32 +118,19 @@ void game(){
 
 void available(){
 	printf("\n\nVerfügbare Städte: \n");
-	for(int i=0; i<26; i++){
-		if(fSet.bucket[i] == 0)
-			continue;
-		struct word *t = fSet.bucket[i];
-		while(t != 0){
-			if(!t->set)
-				printf("%s  ",t->name); 
-			t = t->fnext;
-		}	
+	for(struct word *i = list.head; i->bucketNext!=NULL; i=i->bucketNext){
+		if(!i->set)
+			printf("%s  ",i->name); 
 	}
 	printf("\n\n");
 	printf("Press enter to continue\n");
 }
 struct word* checkValid(char *str){
-	for(int j=0; j<26; j++){
-		if(fSet.bucket[j]==0)
+	for(struct word *i = list.head; i->bucketNext !=NULL; i = i->bucketNext){
+		if(strncmp(str,i->name,strlen(str)-1)==0)
+			return i;
+		else
 			continue;
-		struct word *i = fSet.bucket[j];
-		while(i != 0){
-			if(strncmp(str,i->name,strlen(str)-1)==0)
-				return i;
-			else{
-				i = i->fnext;
-				continue;
-			}
-		}
 	}
 	return NULL;
 }	
@@ -163,7 +142,7 @@ int hashB(char *str){
 
 int hashE(char *str){
 	/* map lowercase char ascii val 0 to 25*/
-	return ((int)*str-0x61+32);
+	return ((int)*str-0x61);
 }
 
 int init(){
@@ -176,33 +155,35 @@ int init(){
 	char buf[BUFFLEN];
 	while(fgets(buf,BUFFLEN,file)){
 		counter++;
+		//printf("Stadt: %s mit HASH: %d\n",buf,hashB(buf));
 		struct word *newWord;
 		newWord = (struct word*) calloc(1,sizeof(*newWord));
 		if(!newWord){exit(1);} //exiting if mem wasn't allocated
 		buf[strlen(buf)-1] = 0; //cutting off newLine
-	
+
 		newWord->set = false; //set properties for new entry
 		newWord->name = (char *)malloc(strlen(buf));
 		if(!(newWord->name)){exit(1);}//exiting if mem wasn't allocated
 		strcpy(newWord->name,buf);
-		newWord->fnext = NULL;
-		newWord->enext = NULL;
+		newWord->next = NULL;
+		newWord->prev = NULL;
+		newWord->bucketNext = NULL;
 	
 		int fchar = hashB(newWord->name); //add new entry to the two hashtables
 		int nchar = hashE(newWord->name);
-		if(fSet.bucket[fchar] == 0){ //adding entry to bucketlist for first char
-			fSet.bucket[fchar] = newWord;
+		if(fset.bucket[fchar] == 0){ //adding entry to bucketlist for first char
+			fset.bucket[fchar] = newWord;
 		}else{
-			struct word *tmp = fSet.bucket[fchar];
+			struct word *tmp = fset.bucket[fchar];
 			while(tmp->fnext != 0){
 				tmp = tmp->fnext;
 			}tmp->fnext = newWord;	
 		}
 
-		if(eSet.bucket[nchar] == 0){ //adding entry to bucketlist for last char
-			eSet.bucket[nchar] = newWord;
+		if(eset.bucket[nchar] == 0){ //adding entry to bucketlist for last char
+			eset.bucket[nchar] = newWord;
 		}else{
-			struct word *tmp = eSet.bucket[nchar];
+			struct word *tmp = eset.bucket[nchar];
 			while(tmp->enext != 0){
 				tmp = tmp->enext;
 			}tmp->enext = newWord;	
@@ -215,6 +196,11 @@ int init(){
 	return 0;
 
 }
+
+/*
+* Also checking for blankspace stops ideling in this function. Could cause some bugs with cites that have spaces in their name
+*/
+
 void cleanBuffer(){
 	int x;
 	while((x=getchar()) != EOF && x != '\n' && x!=32);

@@ -6,6 +6,11 @@
 #include <unistd.h>
 
 /*
+ * currently using linked list instead of hash table, because of seg fault i am not able to fix
+*/ 
+
+
+/*
  * functions
 */ 
 int hashB(char *str);
@@ -13,12 +18,11 @@ int hashE(char *str);
 int init();
 void game();
 struct word* checkValid(char *str);
+void printList();
 void available();
 void cleanBuffer();
 
 #define BUFFLEN 255
-#define WORDSET_MAX 26
-#define FILENAME "cities.txt"
 /*
  * structs
  *
@@ -26,49 +30,44 @@ void cleanBuffer();
 struct word{
 	char *name;
 	bool set;
-	struct word *fnext;
-	struct word *enext; 
+	struct word *next;
+	struct word *prev;
+	struct word *bucketNext;
 };
+
+
 struct wordSet{
-	struct word *bucket[WORDSET_MAX];
+	struct word *bucket[26];
 };	
 
+
+struct linkedList{
+	struct word *head;
+};	
 /*
  * global vars
 */ 
-struct wordSet fSet;
+struct wordSet bSet;
 struct wordSet eSet;
+struct linkedList list;
 int counter = 0;
 struct word first;
 struct word last;
 
 int main(){
 	init();
-
 	srand(time(0)^getpid());
-	int rng = rand()%counter;
-	printf("random: %d\n",rng);
-	int curr = 0;
-	bool exit = false;
-	for(int i=0; i<WORDSET_MAX; i++){
-		if(exit)
-			break;
-		if(fSet.bucket[i]==0)
-			continue;
-		struct word *t = fSet.bucket[i];
-		while(t != 0){
-			if(rng == ++curr){
-				first = *t;
-				last = *t;
-				exit = true;
-				break;
-			}else{
-				t = t->fnext;
-				continue;
-			}	
-		}
+	int rng = rand()%(counter-1);
+	int i=0;
+	struct word *tmp = list.head;
+	while(i!=rng){
+		i++;
+		tmp = tmp->bucketNext;
 	}
-
+	tmp->set = true;
+	first = *tmp;
+	last = *tmp;
+	
 	game();
 
 	return 0;
@@ -82,7 +81,7 @@ void game(){
 		}	
 		printf("%2d Words remaining:\n Current queue of words: %s,...,%s\n",counter,first.name,last.name);  
 		printf("Next word:    ");		
-		char *str = calloc(128,sizeof(char));
+		char *str = calloc(128,sizeof(char));;
 		
 		fgets(str,sizeof(str),stdin);
 		if(*str == '\n'){
@@ -93,6 +92,7 @@ void game(){
 		}
 
 		cleanBuffer();
+		printf("stuck after bufferclean \n");
 		struct word *selec;
 		if((selec=checkValid(str)))
 			printf("Gültige Eingabe. Sie haben %s gewaehlt!\n",selec->name);
@@ -126,32 +126,20 @@ void game(){
 
 void available(){
 	printf("\n\nVerfügbare Städte: \n");
-	for(int i=0; i<26; i++){
-		if(fSet.bucket[i] == 0)
-			continue;
-		struct word *t = fSet.bucket[i];
-		while(t != 0){
-			if(!t->set)
-				printf("%s  ",t->name); 
-			t = t->fnext;
-		}	
+	for(struct word *i = list.head; i->bucketNext!=NULL; i=i->bucketNext){
+		if(!i->set)
+			printf("%s  ",i->name); 
 	}
 	printf("\n\n");
 	printf("Press enter to continue\n");
 }
 struct word* checkValid(char *str){
-	for(int j=0; j<26; j++){
-		if(fSet.bucket[j]==0)
+	for(struct word *i = list.head; i->bucketNext !=NULL; i = i->bucketNext){
+	//	int len = strlen(str);//die aus der datei eingelesenen strings enden auf \n	
+		if(strncmp(str,i->name,strlen(str)-1)==0)
+			return i;
+		else
 			continue;
-		struct word *i = fSet.bucket[j];
-		while(i != 0){
-			if(strncmp(str,i->name,strlen(str)-1)==0)
-				return i;
-			else{
-				i = i->fnext;
-				continue;
-			}
-		}
 	}
 	return NULL;
 }	
@@ -163,12 +151,12 @@ int hashB(char *str){
 
 int hashE(char *str){
 	/* map lowercase char ascii val 0 to 25*/
-	return ((int)*str-0x61+32);
+	return ((int)*str-0x61);
 }
 
 int init(){
 	FILE *file;
-	file = fopen(FILENAME,"r");
+	file = fopen("states.txt","r");
 	if(file==NULL){
 		printf("Error reading file\n\n");
 		exit(1);
@@ -176,37 +164,55 @@ int init(){
 	char buf[BUFFLEN];
 	while(fgets(buf,BUFFLEN,file)){
 		counter++;
+		//printf("Stadt: %s mit HASH: %d\n",buf,hashB(buf));
 		struct word *newWord;
 		newWord = (struct word*) calloc(1,sizeof(*newWord));
-		if(!newWord){exit(1);} //exiting if mem wasn't allocated
+		if(!newWord){exit(1);}
 		buf[strlen(buf)-1] = 0; //cutting off newLine
-	
+
 		newWord->set = false; //set properties for new entry
 		newWord->name = (char *)malloc(strlen(buf));
-		if(!(newWord->name)){exit(1);}//exiting if mem wasn't allocated
 		strcpy(newWord->name,buf);
-		newWord->fnext = NULL;
-		newWord->enext = NULL;
+		newWord->next = NULL;
+		newWord->prev = NULL;
+		newWord->bucketNext = NULL;
 	
-		int fchar = hashB(newWord->name); //add new entry to the two hashtables
-		int nchar = hashE(newWord->name);
-		if(fSet.bucket[fchar] == 0){ //adding entry to bucketlist for first char
-			fSet.bucket[fchar] = newWord;
-		}else{
-			struct word *tmp = fSet.bucket[fchar];
-			while(tmp->fnext != 0){
-				tmp = tmp->fnext;
-			}tmp->fnext = newWord;	
-		}
 
-		if(eSet.bucket[nchar] == 0){ //adding entry to bucketlist for last char
-			eSet.bucket[nchar] = newWord;
+		if(list.head == NULL){
+			//printf("Added first new word\n");
+			list.head = newWord;
 		}else{
-			struct word *tmp = eSet.bucket[nchar];
-			while(tmp->enext != 0){
-				tmp = tmp->enext;
-			}tmp->enext = newWord;	
+			//printf("adding word in list\n");
+			struct word *tmp = list.head;
+			while(tmp->bucketNext != NULL)
+				tmp = tmp->bucketNext;
+			tmp->bucketNext = newWord;
+		}	
+
+
+	/*
+		int bHash = hashB(newWord->name); //add new entry to the two hashtables
+		int eHash = hashE(newWord->name);
+		struct word *tmp = bSet.bucket[bHash]; //add entry to beginning Hash table
+		if(tmp != NULL){
+			printf("bucket already has element: %s\n",tmp->name);
+			while(tmp->bucketNext != NULL){
+				tmp = tmp->bucketNext;
+			}
+			tmp->bucketNext = newWord;//this line is causing a seg fault
+		}else{
+			bSet.bucket[bHash] = newWord;
+			printf("new First word in bucket\n");
 		}
+		tmp = eSet.bucket[eHash]; //add new entry to end Hash table
+		if(tmp!=NULL){
+			while(tmp != NULL){
+				tmp = tmp->bucketNext;
+			}
+			tmp->bucketNext = newWord;
+		}else
+			eSet.bucket[eHash] = newWord;
+*/
 	}
 
 
@@ -215,6 +221,11 @@ int init(){
 	return 0;
 
 }
+
+/*
+* Also checking for blankspace stops ideling in this function. Could cause some bugs with cites that have spaces in their name
+*/
+
 void cleanBuffer(){
 	int x;
 	while((x=getchar()) != EOF && x != '\n' && x!=32);
