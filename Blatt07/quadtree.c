@@ -8,7 +8,8 @@
 #define FILENAME "FmK.txt"
 #define BUFFLEN 128
 
-//für 2x2 bild liegt fehler eindeutig im zeichenen! selbst is set fkt noch korrekt
+//TODO ausgabe als verschachtelter string
+
 
 //forward declaration
 typedef struct qtreeNode_t qtreeNode_t;
