@@ -5,13 +5,11 @@
 #include <string.h>
 
 #define MAX_CHILDS 4
-#define FILENAME "Asta.txt"
+#define FILENAME "test.txt"
 #define BUFFLEN 128
 
-//TODO ausgabe als verschachtelter string
-//TODO zusammenfassen von gesetzen knoten! alles weiße zusammfassen
-
-//minimalisieren des trees direkt beim einfügen
+//for debugging
+#define PRINT
 
 //forward declaration
 typedef struct qtreeNode_t qtreeNode_t;
@@ -55,10 +53,20 @@ int handleInput(char *str,Pixel_t *p){
 	return -1;
 }
 
+bool checkLeaf(qtreeNode_t *node){
+	//printf("lu %p ll %p ru %p rl %p\n",node->lu,node->ll,node->ru,node->rl);
+	if(!node->lu && !node->ll && !node->ru && !node->rl){
+		//printf("Is leaf!\n");
+		return true;
+	}else 
+		return false;
+}
+
 void insert(Pixel_t *pix, qtreeNode_t *node){
 	//pruefen ob es sich um den basisfall handelt
 	if(node->size == 1){
 		node->set = true;
+		node->ll=0;node->lu=0;node->rl=0;node->ru=0;
 		return;
 	}	
 	//checking in which quadrant of the tree/subtree the input pixel is in relation to the given node
@@ -101,9 +109,40 @@ void insert(Pixel_t *pix, qtreeNode_t *node){
 		pix->y -= si/2;
 		insert(pix,node->rl);
 	}
-	// hier jetzt aussortieren
+	//check if this part of the tree can be minimized
+	bool leaf = checkLeaf(node);
+	if(leaf){
+			if(node->ll->set && node->lu->set && node->rl->set && node->ru->set){
+				free(node->ll);node->ll=0;
+				free(node->lu);node->lu=0;
+				free(node->rl);node->rl=0;
+				free(node->ru);node->ru=0;
+				node->set = true;
+				#ifdef PRINT
+				printf("Knoten wurden zusammengelegt\n");
+				#endif
+			}
+	}	
 
 
+}
+
+void printString(qtreeNode_t *node){
+	if(!node){printf("B");return;}
+	if(checkLeaf(node)){
+		if(node->set)
+			printf("W");
+		else
+			printf("B");
+	}else{
+		printf("[");
+		printString(node->ll);
+		printString(node->lu);
+		printString(node->rl);
+		printString(node->ru);
+		printf("]");
+	}
+	
 
 }
 
@@ -150,27 +189,6 @@ void printImg(qtreeNode_t *node){
 	free(pix);
 }
 
-bool checkQuad(qtreeNode *node){
-	if(node->lu && node->ll && node->ru && node->rl){
-		if(nude->lu->set && node->ll->set && node->ru->set && node->rl->set){
-			return true;
-		}
-	}
-	return false;	
-}
-
-
-//einmal gesetze pixel können nicht mehr auf schwarz gesetzt werden, sonst funktioniert diese methode so nicht
-void minimize(qtreeNode *node){
-		
-	minimize(node->lu);
-	minimize(node->ll);
-	minimize(node->ru);
-	minimize(node->rl);
-
-}
-
-
 void workLoop(qtreeNode_t *tree){
 	FILE *file;
 	file = fopen(FILENAME,"r");
@@ -184,10 +202,13 @@ void workLoop(qtreeNode_t *tree){
 		if(!handleInput(buf,pix)){
 			insert(pix,tree);
 		}else if(handleInput(buf,pix) == 1)
-		free(pix);
-	}
 
-	printImg(tree);
+			printString(tree);
+			printf("\n");
+			printImg(tree);
+		}	free(pix);
+	}
+//TODO zusammenfassen von gesetzen knoten! alles weiße zusammfassen
 	fclose(file);
 }
 
