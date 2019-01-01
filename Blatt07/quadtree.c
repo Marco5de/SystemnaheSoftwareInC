@@ -150,26 +150,6 @@ void printImg(qtreeNode_t *node){
 	free(pix);
 }
 
-bool checkQuad(qtreeNode *node){
-	if(node->lu && node->ll && node->ru && node->rl){
-		if(nude->lu->set && node->ll->set && node->ru->set && node->rl->set){
-			return true;
-		}
-	}
-	return false;	
-}
-
-
-//einmal gesetze pixel können nicht mehr auf schwarz gesetzt werden, sonst funktioniert diese methode so nicht
-void minimize(qtreeNode *node){
-		
-	minimize(node->lu);
-	minimize(node->ll);
-	minimize(node->ru);
-	minimize(node->rl);
-
-}
-
 
 void workLoop(qtreeNode_t *tree){
 	FILE *file;
