@@ -201,7 +201,7 @@ void workLoop(qtreeNode_t *tree){
 		if(!(pix = calloc(1,sizeof(pix)))){printf("Error allocating memory!\n");exit(1);}
 		if(!handleInput(buf,pix)){
 			insert(pix,tree);
-		}else if(handleInput(buf,pix) == 1)
+		}else if(handleInput(buf,pix) == 1){
 
 			printString(tree);
 			printf("\n");
