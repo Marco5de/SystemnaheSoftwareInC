@@ -6,57 +6,127 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <strings.h>
 
 #define COUNT 10
+#define DEBUG
+
 
 typedef struct file{
 	char *path;
 	off_t size;
-	struct file *next;
 }file;
+
+//forward declarations
+void compareSize(off_t size, char *path, char *fname);
+int cmpfunc(const void *a, const void *b);
+void debug_printList();
+char* assemblePathstring(char *path, char *fname);
 
 file list[COUNT] = {0}; 
 
-int main(int argc, char *argv[]){
+void du_hog_readdir(char *path){
+	//declaring needed struct to get any information about directorys or files
 	struct stat attribut;
 	DIR *dir;
-	struct dirent *dirzeiger;
+	struct dirent *dirptr;
+	//tries to open directory. Exit if not succesfull
+	if((dir=opendir(path))==NULL){
+		printf("Error opening directory \n\n");
+		exit(1);
+	}	
+	printf("Succesfully opend dir: %s\n",path);
 
+	while((dirptr = readdir(dir)) != NULL){
+		//tries to get information about file (can also be a directory)
+		if(lstat((*dirptr).d_name, &attribut) == -1){
+			printf("Error in lstat function \n\n");
+			exit(1);
+		}	
+		char *timestr = ctime(&attribut.st_mtime);
+
+		//checks wether the current file is a reg. file, directory, character device or an unknown file
+		if(attribut.st_mode & S_IFREG){
+			off_t size = attribut.st_size;
+			compareSize(size,path,(*dirptr).d_name);
+			printf("Regular file: %s Size %jdBytes Last changed: %s",(*dirptr).d_name,size,timestr);
+		}
+		else if(attribut.st_mode & S_IFDIR){
+			printf("Dir: %s Last changed:%s ",(*dirptr).d_name,timestr);
+			//recursive function call
+			if((strcmp((*dirptr).d_name,".")!=0 && strcmp((*dirptr).d_name,"..")!=0)){
+				#ifdef DEBUG
+				printf("Recursive function call to dir: %s\n",assemblePathstring(path,(*dirptr).d_name));
+				#endif
+				du_hog_readdir(assemblePathstring(path,(*dirptr).d_name));					
+			}
+		}
+		else if(attribut.st_mode & S_IFCHR){
+			printf("Devicefile: %s Last changed: %s",(*dirptr).d_name,timestr);
+		}else
+			printf("Unknown file\n");
+	}
+	//tires to close current directory
+	if(closedir(dir) == -1)
+		printf("Error closing dir\n\n");
+
+
+}
+
+int main(int argc, char *argv[]){
 	if(argc != 2){
 		printf("Error, wrong number of arguments\n\n");
 		exit(1);
 	}
-
-	if((dir=opendir(argv[1]))==NULL){
-		printf("Error opening dir\n\n");
-		exit(1);
-	}
-	printf("Succesfully opend dir \n\n");
-
-	while((dirzeiger = readdir(dir)) != NULL){
-		if(lstat((*dirzeiger).d_name, &attribut) == -1){
-			printf("Error in lstat function \n\n");
-			exit(1);
-		}
-		
-		char *timestr = ctime(&attribut.st_mtime);
-
-
-		if(attribut.st_mode & S_IFREG){
-			off_t size = attribut.st_size;
-			printf("Regular file: %s Size %jdBytes Last changed: %s",(*dirzeiger).d_name,size,timestr);
-		}else if(attribut.st_mode & S_IFDIR)
-			printf("Dir: %s Last changed:%s ",(*dirzeiger).d_name,timestr);
-		else if(attribut.st_mode & S_IFCHR)
-			printf("Devicefile: %s Last changed: %s",(*dirzeiger).d_name,timestr);
-		else
-			printf("Unknown file\n");
-	}
-	if(closedir(dir) == -1)
-		printf("Error closing dir\n\n");
+	du_hog_readdir(argv[1]);
 	
-
-
 	return 0;
 
+}
+
+//helper functions
+void compareSize(off_t size, char* path, char *fname){
+	if(size < list[COUNT-1].size){
+		//nothing todo in this case file is not large enough to be considered top COUNT
+		#ifdef DEBUG
+		printf("---Smaller FILE found: %s SIZE: %jdBytes---\n",fname,size);
+		#endif
+		return;
+	}
+	#ifdef DEBUG
+	printf("---FILE for list found---\n");
+	#endif 
+
+	char *fpath = assemblePathstring(path,fname);
+
+	file newFile = {fpath,size};
+	list[COUNT-1] = newFile;
+	qsort(list,COUNT,sizeof(file),cmpfunc);
+	#ifdef DEBUG
+	debug_printList();
+	#endif
+}
+
+int cmpfunc(const void *a, const void *b){
+	file *a1 = (file*)a;
+	file *b1 = (file*)b;
+	return (b1->size - a1->size);
+}
+
+//generate fpath for struct, path + '/' + fname + \0
+char* assemblePathstring(char *path, char *fname){
+	char *fpath = calloc(1,strlen(path)+strlen(fname)+2);
+	if(fpath == NULL){printf("ERROR allocating memory\n");exit(1);}
+	memcpy(fpath,path,strlen(path));
+	memcpy(fpath+strlen(path)+1, fname,strlen(fname)+1);//+1 to copy nullbyte \0
+   	*(fpath+strlen(path)) = '/';	
+
+	return fpath;
+}
+
+void debug_printList(){
+	for(int i=0; i<COUNT; i++){
+		printf("Name: %s Size: %jd \n",list[i].path,list[i].size);
+	}
+	printf("\n\n");
 }
