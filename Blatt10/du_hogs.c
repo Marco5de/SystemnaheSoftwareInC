@@ -7,9 +7,10 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <strings.h>
+#include <errno.h>
 
 #define COUNT 10
-#define DEBUG
+//#define DEBUG
 
 
 typedef struct file{
@@ -22,6 +23,7 @@ void compareSize(off_t size, char *path, char *fname);
 int cmpfunc(const void *a, const void *b);
 void debug_printList();
 char* assemblePathstring(char *path, char *fname);
+char* stringConcat(const char* a, const char* b);
 
 file list[COUNT] = {0}; 
 
@@ -38,8 +40,11 @@ void du_hog_readdir(char *path){
 	printf("Succesfully opend dir: %s\n",path);
 
 	while((dirptr = readdir(dir)) != NULL){
+		if(dirptr->d_name[0] == '.'){
+			continue;
+		}
 		//tries to get information about file (can also be a directory)
-		if(lstat((*dirptr).d_name, &attribut) == -1){
+		if(lstat(assemblePathstring(path,assemblePathstring("/",dirptr->d_name)), &attribut) == -1){
 			printf("Error in lstat function \n\n");
 			exit(1);
 		}	
@@ -54,12 +59,7 @@ void du_hog_readdir(char *path){
 		else if(attribut.st_mode & S_IFDIR){
 			printf("Dir: %s Last changed:%s ",(*dirptr).d_name,timestr);
 			//recursive function call
-			if((strcmp((*dirptr).d_name,".")!=0 && strcmp((*dirptr).d_name,"..")!=0)){
-				#ifdef DEBUG
-				printf("Recursive function call to dir: %s\n",assemblePathstring(path,(*dirptr).d_name));
-				#endif
-				du_hog_readdir(assemblePathstring(path,(*dirptr).d_name));					
-			}
+			du_hog_readdir(assemblePathstring(path,assemblePathstring("/",(*dirptr).d_name)));					
 		}
 		else if(attribut.st_mode & S_IFCHR){
 			printf("Devicefile: %s Last changed: %s",(*dirptr).d_name,timestr);
@@ -79,7 +79,8 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 	du_hog_readdir(argv[1]);
-	
+	debug_printList();	
+
 	return 0;
 
 }
@@ -125,6 +126,7 @@ char* assemblePathstring(char *path, char *fname){
 }
 
 void debug_printList(){
+	printf("\n\n");
 	for(int i=0; i<COUNT; i++){
 		printf("Name: %s Size: %jd \n",list[i].path,list[i].size);
 	}
