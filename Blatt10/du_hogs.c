@@ -12,6 +12,9 @@
 #define COUNT 10
 //#define DEBUG
 
+//Todo format output
+//todo commandline arguments
+//todo free memory when done using
 
 typedef struct file{
 	char *path;
@@ -74,15 +77,30 @@ void du_hog_readdir(char *path){
 }
 
 int main(int argc, char *argv[]){
-	if(argc != 2){
-		printf("Error, wrong number of arguments\n\n");
-		exit(1);
+	int count = 10;
+	char *path = ".";
+
+	if(argc >= 2){
+		if(argv[1][0]=='-' && argv[1][1]=='?'){
+			printf("Usage: %s [-N] [dir]\n\n",argv[0]);	
+			exit(0);
+		}
+		else if(argv[1][0]=='-'){
+			count = atoi(argv[1]+1);
+			printf("Listing the %d biggest files\n\n",count); 
+		}
+		else{
+			path = argv[1];
+		}
 	}
-	du_hog_readdir(argv[1]);
+	if(argc>=3){
+		path = argv[2];
+	}
+
+	du_hog_readdir(path);
 	debug_printList();	
 
 	return 0;
-
 }
 
 //helper functions
