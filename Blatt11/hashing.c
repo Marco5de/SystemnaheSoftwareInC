@@ -3,7 +3,7 @@
 
 #define HASHSTART 5381
 
-unsigned int compute_hash(stralloc* s) {
+unsigned int compute_hash(stralloc *s) {
    int hashval = HASHSTART;
    for (unsigned int index = 0; index < s->len; ++index) {
 	  char ch = s->s[index];

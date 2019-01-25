@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include "hashing.h"
 #include <stdlib.h>
+#include <string.h>
 
 #define DEBUG
 #define pi 3.14159265358979323846
@@ -25,17 +26,16 @@ int counter;
 //forward declarations
 int init_game(FILE *file);
 int read_line(FILE *file, stralloc *name, stralloc *longi, stralloc *lati);
-void gameLoop();
+void game_loop();
+double distance(stralloc *c1,stralloc *c2);
 
 
-void cleanHashptr(){
-	for(int i=0; i<HASH_SIZE; i++){
-		if(hash[i])
-			printf("Unsafe\n");
+int main(int argc, char **argv){
+	if(argc != 3){
+		fprintf(stderr,"Usage: %s [city1] [city2]\n",argv[0]);
+		exit(1);
 	}
-}
-
-int main(){
+	
 	FILE *file = fopen(F_NAME,"r");
 	if(!file){fprintf(stderr,"err: opening file\n");exit(1);}
 	if(init_game(file)){
@@ -44,14 +44,59 @@ int main(){
 #ifdef DEBUG
 	printf("counter: %d\n",counter);
 #endif	
-	if(gameLoop())
+	char *city1 = argv[1];
+	char *city2 = argv[2];
+	stralloc c1 = {0};
+	c1.s = city1;
+	c1.len = strlen(city1);
+	stralloc c2 = {0};
+	c2.s = city2;
+	c2.len = strlen(city2);
 
+	double d = distance(&c1,&c2);
+	printf("distance: %f\n",d);
+	game_loop();
 
 	return 0;
 
 }
 
+void game_loop(){
+	while(1){
+		
 
+
+	}
+}
+
+double distance(stralloc *c1, stralloc *c2){
+	unsigned int index1 = compute_hash(c1)%HASH_SIZE;	
+	unsigned int index2 = compute_hash(c2)%HASH_SIZE;
+
+	#ifdef DEBUG
+	printf("Hash: %u\n",index1);
+	#endif
+	struct city *city1 = hash[index1];
+	struct city *city2 = hash[index2];
+
+
+	if(!city1 || !city2){fprintf(stderr,"Err: hashing error\n");exit(1);}
+	while(city1!=NULL && strcmp(c1->s,city1->name.s)){
+		printf("Current city: %s Next: %p\n",city1->name.s,city1->next);
+		city1 = city1->next;
+	}	
+	while(city2!=NULL && strcmp(c2->s,city2->name.s)){
+		printf("Current city: %s\n",city2->name.s);
+		city2 = city2->next;
+	}	
+	if(!city1 || !city2){fprintf(stderr,"Err: wrong cities\n");exit(1);}	
+	
+	#ifdef DEBUG
+	printf("Distance between %s and %s\n",city1->name.s,city2->name.s);
+	#endif
+
+	return 0.0;
+}
 int read_line(FILE* fp, stralloc* name, stralloc *longi, stralloc *lati) {
 	int current = 0;
 
@@ -95,7 +140,7 @@ int init_game(FILE *file){
 		while(read_line(file,&name,&longi,&lati)){
 			unsigned int hashnum = compute_hash(&name);
 			#ifdef DEBUG
-			printf("Hash calculated: %u \n",hashnum);
+			printf("Hash %s: %u \n",name.s,hashnum);
 			#endif
 			int index = hashnum % HASH_SIZE;
 			struct city *new_city = calloc(1,sizeof(struct city));
