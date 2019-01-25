@@ -9,23 +9,55 @@
 #define stdout 1
 #define stderr 2
 
+struct swititching_pair{
+	char current;
+	char new;
+	struct swititching_pair *next;
+};	
 
 //forward declaration
 int itoa(int d, char* out);
 
 //todo usage with formatting
 //todo currently not checking if write is really writing all the content its been given
+//todo alle spezifikationen die im pdf zu commandline args gegegebn sind erfüllen!
+//prüfen dass nur gültige char eingegeben werden
 int main(int argc, const char **argv){
 
 	struct stat file_stat;
 	int fd = 0;
 	void *mem;
+	struct swititching_pair *list;
 
 	if(argc!=4){
 		char *out = "Usage: ./tr [replace][replace with] [File]\n";
 		write(stderr,out,strlen(out));
 		exit(EXIT_FAILURE);
 	}	
+	
+	if(strlen(argv[1]) != strlen(argv[2])){
+		char *out = "Error: replacement commands have to be the same length!\n";
+		write(stderr,out,strlen(out));
+		exit(EXIT_FAILURE);
+	}
+
+	list = calloc(1,sizeof(struct swititching_pair));
+	if(!list){char *err="Err: allocating memory\n";write(2,err,strlen(err));}
+	list->current = *argv[1];
+	list->new = *argv[2];
+	list->next = NULL;
+
+	struct swititching_pair *tmp = list;
+	for(int i=1; i<strlen(argv[1]);i++){
+		tmp->next = calloc(1,sizeof(struct swititching_pair));
+		if(!tmp){char *err="Err: allocating memory\n";write(2,err,strlen(err));}
+		tmp->current = *(argv[1]+i);
+	   	tmp->new = *(argv[2]+i);
+		tmp->next->next = NULL;
+		tmp = tmp->next;	
+	}
+	char *list_init = "~~~Init der liste ist beendet~~~\n";
+	write(stdout,list_init,strlen(list_init));
 
 	if((fd = open(argv[3],O_RDWR)) < 0){
 		char *out = "Error: opening file failed\n";
