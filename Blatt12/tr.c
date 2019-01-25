@@ -53,7 +53,7 @@ int main(int argc, const char **argv){
 	}	
 	char *map_opend = "~~~Map successfully opend~~~\n";
 	write(stdout,map_opend,strlen(map_opend));
-
+	write(stdout,mem,file_stat.st_size);
 
 
 	close(fd);
