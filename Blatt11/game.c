@@ -95,7 +95,28 @@ double distance(stralloc *c1, stralloc *c2){
 	printf("Distance between %s and %s\n",city1->name.s,city2->name.s);
 	#endif
 
-	return 0.0;
+	double latitude_city1 = city1->latitude;
+	double latitude_city2 = city2->latitude;
+	double longitude_city1 = city1->longitude;
+	double longitude_city2 = city2->longitude;
+	//formulas off of wikipedia
+	const double f = 1/298.257223563;
+	const double a = 6378.137;
+
+	const double F = 2*pi/360*(latitude_city1 + latitude_city2)/2;
+	const double G = 2*pi/360*(latitude_city1 - latitude_city2)/2;
+	const double l = 2*pi/360*(longitude_city1 - longitude_city2)/2;
+
+	const double S = pow(sin(G),2) * pow(cos(l),2) + pow(cos(F),2) * pow(sin(l),2);
+	const double C = pow(cos(G),2) * pow(cos(l),2) + pow(sin(F),2) * pow(sin(l),2);
+	const double w = atan(sqrt(S/C));
+	const double D = 2 * w * a;
+
+	const double T = sqrt(S*C) / w;
+	const double H1 = 3*T-1/(2*C);
+	const double H2 = 3*T+1/(2*S);
+
+	return D*(1 + f*H1*pow(sin(F),2)*pow(cos(G),2) - f*H2*pow(cos(F),2)*pow(sin(G),2));
 }
 int read_line(FILE* fp, stralloc* name, stralloc *longi, stralloc *lati) {
 	int current = 0;
