@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <stralloc.h>
 #include <math.h>
-#include <unistd.h>
 #include "hashing.h"
 #include <stdlib.h>
 #include <string.h>
@@ -54,7 +53,7 @@ int main(int argc, char **argv){
 	c2.len = strlen(city2);
 
 	double d = distance(&c1,&c2);
-	printf("distance: %f\n",d);
+	printf("distance between your selected cities: %f\n",d);
 	game_loop();
 
 	return 0;
@@ -62,8 +61,11 @@ int main(int argc, char **argv){
 }
 
 void game_loop(){
+	printf("Jetzt im Main Loop: Geben sie zwei Städte ein um die Distanz zwischen ihnen auszurechen\n"); 
+	char buffer[256];
 	while(1){
-		
+		while(!fgets(buffer,256,stdin));
+		printf("Entered string %s",buffer);
 
 
 	}
