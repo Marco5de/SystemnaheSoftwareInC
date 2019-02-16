@@ -1,4 +1,3 @@
-#include <stralloc.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,15 +27,26 @@ void die(){
 }
 
 ssize_t readline(int fd,char *buf,size_t bufflen){
-	int res,len;
+	int ret=1;
+	int len=0;
+	while(ret && len<bufflen){
+		ret=read(fd,buf+len,bufflen);
+		if(ret<0)
+			die();
 
+		len+=ret;
+	}
+
+	return len;
+/*	
 	for(len=0;len<bufflen-1;len++){
-		if((res=read(fd,buf+len,1))<0)
+		if((ret=read(fd,buf+len,1))<0)
 			return -1;
-		if(res==0 || buf[len]=='\n')
+		if(ret==0 || buf[len]=='\n')
 			break;
 	}
 	buf[len]='\0';
+	*/
 	return len;
 }
 
