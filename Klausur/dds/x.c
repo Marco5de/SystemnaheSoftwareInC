@@ -5,12 +5,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-
 void die(){
 	exit(1);
 }
-
-
 
 int main(int argc, char **argv){
 	if(argc!=4)
