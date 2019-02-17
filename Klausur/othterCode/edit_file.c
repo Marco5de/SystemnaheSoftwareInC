@@ -38,16 +38,6 @@ ssize_t readline(int fd,char *buf,size_t bufflen){
 	}
 
 	return len;
-/*	
-	for(len=0;len<bufflen-1;len++){
-		if((ret=read(fd,buf+len,1))<0)
-			return -1;
-		if(ret==0 || buf[len]=='\n')
-			break;
-	}
-	buf[len]='\0';
-	*/
-	return len;
 }
 
 
